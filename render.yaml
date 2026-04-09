@@ -1,5 +1,5 @@
 services:
-  - type: worker
+  - type: web
     name: chatgpt-auto-bot
     env: python
     region: singapore
@@ -10,6 +10,7 @@ services:
       playwright install chromium
       python clear_webhook.py || true
     startCommand: python bot_main.py
+    healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.8
