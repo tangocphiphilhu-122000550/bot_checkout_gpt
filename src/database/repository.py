@@ -278,6 +278,31 @@ class CardBinRepository:
                 }
                 for b in bins
             ]
+    
+    @staticmethod
+    def delete(bin_number: str) -> bool:
+        """Delete a specific BIN"""
+        db = get_database()
+        
+        with db.get_session() as session:
+            card_bin = session.query(CardBin).filter(CardBin.bin_number == bin_number).first()
+            if card_bin:
+                session.delete(card_bin)
+                session.commit()
+                log.success(f"✅ Deleted BIN: {bin_number}")
+                return True
+            return False
+    
+    @staticmethod
+    def delete_all() -> int:
+        """Delete all BINs"""
+        db = get_database()
+        
+        with db.get_session() as session:
+            count = session.query(CardBin).delete()
+            session.commit()
+            log.success(f"✅ Deleted all {count} BINs")
+            return count
 
 
 class ProxyRepository:

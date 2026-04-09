@@ -105,19 +105,39 @@ def get_proxy_delete_keyboard():
     ]
     return InlineKeyboardMarkup(keyboard)
 
-def get_bin_selection_keyboard(bins: list):
-    """Get BIN selection keyboard"""
+def get_bin_selection_keyboard(bins: list, page: int = 0):
+    """Get BIN selection keyboard with pagination (5 BINs per page)"""
     keyboard = []
     
-    # Show first 10 BINs
-    for i, bin_num in enumerate(bins[:10], 1):
+    items_per_page = 5
+    start_idx = page * items_per_page
+    end_idx = start_idx + items_per_page
+    
+    # Show BINs for current page
+    page_bins = bins[start_idx:end_idx]
+    for bin_num in page_bins:
         keyboard.append([InlineKeyboardButton(f"BIN: {bin_num}", callback_data=f"select_bin_{bin_num}")])
+    
+    # Pagination buttons
+    nav_buttons = []
+    if page > 0:
+        nav_buttons.append(InlineKeyboardButton("⬅️ Trang trước", callback_data=f"bin_select_page_{page-1}"))
+    if end_idx < len(bins):
+        nav_buttons.append(InlineKeyboardButton("Trang sau ➡️", callback_data=f"bin_select_page_{page+1}"))
+    
+    if nav_buttons:
+        keyboard.append(nav_buttons)
+    
+    # Page info
+    total_pages = (len(bins) + items_per_page - 1) // items_per_page
+    keyboard.append([InlineKeyboardButton(f"📄 Trang {page+1}/{total_pages}", callback_data="noop")])
     
     # Add "All BINs" option
     keyboard.append([InlineKeyboardButton("🎲 Thử tất cả BIN", callback_data="select_bin_all")])
     keyboard.append([InlineKeyboardButton("🔙 Quay lại", callback_data="upgrade")])
     
     return InlineKeyboardMarkup(keyboard)
+
 
 def get_card_quantity_keyboard():
     """Get card quantity selection keyboard"""
@@ -137,24 +157,58 @@ def get_card_quantity_keyboard():
     ]
     return InlineKeyboardMarkup(keyboard)
 
+
 def get_bin_management_keyboard():
     """Get BIN management keyboard"""
     keyboard = [
         [InlineKeyboardButton("📋 Xem danh sách BIN", callback_data="bin_list")],
         [InlineKeyboardButton("➕ Thêm BIN mới", callback_data="bin_add")],
+        [InlineKeyboardButton("🗑️ Xóa BIN", callback_data="bin_delete_menu")],
         [InlineKeyboardButton("📊 Thống kê BIN", callback_data="bin_stats")],
         [InlineKeyboardButton("🏆 Top BIN tốt nhất", callback_data="bin_top")],
         [InlineKeyboardButton("🏠 Quay lại cấu hình", callback_data="config")],
         [InlineKeyboardButton("❓ Trợ giúp", callback_data="help")]
     ]
     return InlineKeyboardMarkup(keyboard)
-    """Get BIN management keyboard"""
+
+
+def get_bin_delete_keyboard():
+    """Get BIN delete options keyboard"""
     keyboard = [
-        [InlineKeyboardButton("📋 Xem danh sách BIN", callback_data="bin_list")],
-        [InlineKeyboardButton("➕ Thêm BIN mới", callback_data="bin_add")],
-        [InlineKeyboardButton("📊 Thống kê BIN", callback_data="bin_stats")],
-        [InlineKeyboardButton("🏆 Top BIN tốt nhất", callback_data="bin_top")],
-        [InlineKeyboardButton("🏠 Quay lại cấu hình", callback_data="config")],
-        [InlineKeyboardButton("❓ Trợ giúp", callback_data="help")]
+        [InlineKeyboardButton("🗑️ Xóa BIN cụ thể", callback_data="bin_delete_select")],
+        [InlineKeyboardButton("⚠️ Xóa tất cả BIN", callback_data="bin_delete_all_confirm")],
+        [InlineKeyboardButton("🔙 Quay lại", callback_data="config_bin")]
     ]
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_bin_list_delete_keyboard(bins: list, page: int = 0):
+    """Get BIN list for deletion with pagination (5 BINs per page)"""
+    keyboard = []
+    
+    items_per_page = 5
+    start_idx = page * items_per_page
+    end_idx = start_idx + items_per_page
+    
+    # Show BINs for current page
+    page_bins = bins[start_idx:end_idx]
+    for bin_num in page_bins:
+        keyboard.append([InlineKeyboardButton(f"🗑️ Xóa BIN: {bin_num}", callback_data=f"delete_bin_{bin_num}")])
+    
+    # Pagination buttons
+    nav_buttons = []
+    if page > 0:
+        nav_buttons.append(InlineKeyboardButton("⬅️ Trang trước", callback_data=f"bin_delete_page_{page-1}"))
+    if end_idx < len(bins):
+        nav_buttons.append(InlineKeyboardButton("Trang sau ➡️", callback_data=f"bin_delete_page_{page+1}"))
+    
+    if nav_buttons:
+        keyboard.append(nav_buttons)
+    
+    # Page info
+    total_pages = (len(bins) + items_per_page - 1) // items_per_page
+    keyboard.append([InlineKeyboardButton(f"📄 Trang {page+1}/{total_pages}", callback_data="noop")])
+    
+    keyboard.append([InlineKeyboardButton("🔙 Quay lại", callback_data="bin_delete_menu")])
+    
     return InlineKeyboardMarkup(keyboard)

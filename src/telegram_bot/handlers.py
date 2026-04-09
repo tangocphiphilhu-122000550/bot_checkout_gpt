@@ -21,7 +21,8 @@ from telegram_bot.keyboards import (
     get_accounts_list_keyboard, get_config_keyboard,
     get_back_keyboard, get_proxy_management_keyboard,
     get_bin_management_keyboard, get_proxy_delete_keyboard,
-    get_bin_selection_keyboard, get_card_quantity_keyboard
+    get_bin_selection_keyboard, get_card_quantity_keyboard,
+    get_bin_delete_keyboard, get_bin_list_delete_keyboard
 )
 from register.register_bot import ChatGPTRegistrationBot
 from payment.payment_bot import ChatGPTPaymentBot, PaymentConfig
@@ -475,7 +476,12 @@ Hành động này KHÔNG THỂ hoàn tác!
 ➕ Thêm BIN
 
 Gửi BIN (6-8 số đầu của thẻ):
-Ví dụ: 123456
+
+📝 Có thể gửi nhiều BIN cùng lúc, mỗi dòng 1 BIN:
+Ví dụ:
+123456
+234567
+345678
 
 Hoặc gửi /cancel để hủy
 """
@@ -533,6 +539,133 @@ Hoặc gửi /cancel để hủy
             reply_markup=get_bin_management_keyboard()
         )
     
+    elif data == "bin_delete_menu":
+        await query.edit_message_text(
+            """
+🗑️ Xóa BIN
+
+Chọn loại xóa:
+
+• Xóa BIN cụ thể: Chọn BIN muốn xóa
+• Xóa tất cả: Xóa toàn bộ BIN (cẩn thận!)
+""",
+            reply_markup=get_bin_delete_keyboard()
+        )
+    
+    elif data == "bin_delete_select":
+        bins = load_all_bins()
+        
+        if not bins:
+            await query.edit_message_text(
+                "⚠️ Không có BIN nào để xóa!",
+                reply_markup=get_bin_management_keyboard()
+            )
+        else:
+            await query.edit_message_text(
+                f"🗑️ Chọn BIN muốn xóa:\n\n📊 Tổng: {len(bins)} BIN",
+                reply_markup=get_bin_list_delete_keyboard(bins)
+            )
+    
+    elif data.startswith("delete_bin_"):
+        bin_to_delete = data.split("_", 2)[2]
+        
+        try:
+            from database.repository import CardBinRepository
+            from pathlib import Path
+            
+            # Delete from database
+            success = CardBinRepository.delete(bin_to_delete)
+            
+            # Also delete from file
+            bin_file = Path("card_bin.txt")
+            if bin_file.exists():
+                with open(bin_file, 'r') as f:
+                    lines = f.readlines()
+                with open(bin_file, 'w') as f:
+                    for line in lines:
+                        if line.strip() != bin_to_delete:
+                            f.write(line)
+            
+            await query.edit_message_text(
+                f"✅ Đã xóa BIN: {bin_to_delete}",
+                reply_markup=get_bin_management_keyboard()
+            )
+        except Exception as e:
+            await query.edit_message_text(
+                f"❌ Lỗi khi xóa BIN: {str(e)}",
+                reply_markup=get_bin_management_keyboard()
+            )
+    
+    elif data == "bin_delete_all_confirm":
+        keyboard = [
+            [InlineKeyboardButton("⚠️ XÁC NHẬN XÓA TẤT CẢ", callback_data="bin_delete_all_yes")],
+            [InlineKeyboardButton("❌ Hủy", callback_data="bin_delete_menu")]
+        ]
+        await query.edit_message_text(
+            """
+⚠️ CẢNH BÁO!
+
+Bạn có chắc muốn xóa TẤT CẢ BIN?
+Hành động này KHÔNG THỂ hoàn tác!
+""",
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+    
+    elif data == "bin_delete_all_yes":
+        try:
+            from database.repository import CardBinRepository
+            from pathlib import Path
+            
+            # Delete all from database
+            count = CardBinRepository.delete_all()
+            
+            # Clear file
+            bin_file = Path("card_bin.txt")
+            if bin_file.exists():
+                bin_file.write_text("")
+            
+            await query.edit_message_text(
+                f"✅ Đã xóa tất cả {count} BIN!",
+                reply_markup=get_bin_management_keyboard()
+            )
+        except Exception as e:
+            await query.edit_message_text(
+                f"❌ Lỗi: {str(e)}",
+                reply_markup=get_bin_management_keyboard()
+            )
+    
+    # Pagination handlers for BIN selection
+    elif data.startswith("bin_select_page_"):
+        page = int(data.split("_")[-1])
+        bins = load_all_bins()
+        
+        workspace_name = context.user_data.get('workspace_name', 'N/A')
+        
+        await query.edit_message_text(
+            f"""
+✅ Workspace: {workspace_name}
+
+Chọn BIN để thử thanh toán:
+(Có {len(bins)} BIN trong hệ thống)
+""",
+            reply_markup=get_bin_selection_keyboard(bins, page)
+        )
+    
+    # Pagination handlers for BIN deletion
+    elif data.startswith("bin_delete_page_"):
+        page = int(data.split("_")[-1])
+        bins = load_all_bins()
+        
+        await query.edit_message_text(
+            f"🗑️ Chọn BIN muốn xóa:\n\n📊 Tổng: {len(bins)} BIN",
+            reply_markup=get_bin_list_delete_keyboard(bins, page)
+        )
+    
+    # No-op for page info button
+    elif data == "noop":
+        await query.answer()
+        return
+    
     elif data == "help":
         await query.edit_message_text(
             HELP_MESSAGE,
@@ -547,6 +680,9 @@ Hoặc gửi /cancel để hủy
     
     # Registration callbacks
     elif data.startswith("register_"):
+        # Clear any previous context
+        context.user_data.clear()
+        
         count_str = data.split("_")[1]
         
         if count_str == "custom":
@@ -557,6 +693,7 @@ Hoặc gửi /cancel để hủy
         else:
             count = int(count_str)
             context.user_data['register_count'] = count
+            # Do NOT set action for registration
             await query.edit_message_text(
                 f"Xác nhận đăng ký {count} tài khoản?",
                 reply_markup=get_confirmation_keyboard()
@@ -564,6 +701,9 @@ Hoặc gửi /cancel để hủy
     
     # Account selection callbacks
     elif data.startswith("select_account_"):
+        # Clear any previous context
+        context.user_data.clear()
+        
         index = int(data.split("_")[2])
         accounts = load_accounts()
         
@@ -612,7 +752,12 @@ Hoặc gửi /cancel để hủy
             workspace_name = context.user_data.get('workspace_name', 'N/A')
             selected_bin = context.user_data.get('selected_bin', 'N/A')
             
-            bin_text = "Tất cả BIN" if selected_bin == 'all' else f"BIN {selected_bin}"
+            if selected_bin == 'all':
+                bin_text = "Tất cả BIN"
+                card_text = f"{qty} thẻ/BIN"
+            else:
+                bin_text = f"BIN {selected_bin}"
+                card_text = f"{qty} thẻ"
             
             await query.edit_message_text(
                 f"""
@@ -621,7 +766,7 @@ Hoặc gửi /cancel để hủy
 📧 Tài khoản: {account_email}
 🏢 Workspace: {workspace_name}
 💳 BIN: {bin_text}
-🎯 Số thẻ: {qty} thẻ
+🎯 Số thẻ: {card_text}
 
 Bắt đầu thanh toán?
 """,
@@ -631,15 +776,36 @@ Bắt đầu thanh toán?
     # Confirmation callbacks
     elif data == "confirm_yes":
         # Check if this is registration or payment confirmation
-        if 'register_count' in context.user_data and context.user_data.get('action') != 'upgrade':
+        action = context.user_data.get('action')
+        
+        if action == 'upgrade':
+            # This is payment confirmation
+            # Verify we have all required data
+            if not all(k in context.user_data for k in ['selected_account', 'workspace_name', 'selected_bin', 'card_quantity']):
+                await query.edit_message_text(
+                    "❌ Lỗi: Thiếu thông tin. Vui lòng thử lại.",
+                    reply_markup=get_main_menu_keyboard()
+                )
+                context.user_data.clear()
+                return
+            
+            await perform_payment(query, context)
+            
+        elif 'register_count' in context.user_data:
+            # This is registration confirmation
             count = context.user_data['register_count']
             await query.edit_message_text(f"🔄 Đang đăng ký {count} tài khoản...")
             
             # Start registration in background
             await perform_registration(query, context, count)
-        elif context.user_data.get('action') == 'upgrade':
-            # This is payment confirmation
-            await perform_payment(query, context)
+            
+        else:
+            # Unknown action - clear and return to menu
+            await query.edit_message_text(
+                "❌ Lỗi: Không xác định được hành động. Vui lòng thử lại.",
+                reply_markup=get_main_menu_keyboard()
+            )
+            context.user_data.clear()
     
     elif data == "confirm_no":
         await query.edit_message_text(
@@ -925,40 +1091,73 @@ Hoặc /cancel để hủy
     
     elif waiting_for == 'bin_number':
         try:
-            bin_number = text.strip()
+            # Split by newlines to support multiple BINs
+            bin_lines = [line.strip() for line in text.split('\n') if line.strip()]
             
-            # Validate BIN (6-8 digits)
-            if not bin_number.isdigit() or len(bin_number) < 6 or len(bin_number) > 8:
+            if not bin_lines:
                 await update.message.reply_text(
-                    "❌ BIN không hợp lệ. Phải là 6-8 số.\n\nVui lòng thử lại hoặc /cancel để hủy."
+                    "❌ Không tìm thấy BIN nào!\n\nVui lòng thử lại hoặc /cancel để hủy."
                 )
                 return
             
-            # Save to database
-            try:
-                from database.repository import CardBinRepository
-                CardBinRepository.create(bin_number)
-            except:
-                pass
+            success_count = 0
+            fail_count = 0
+            failed_bins = []
             
-            # Save to file
-            from pathlib import Path
-            bin_file = Path("card_bin.txt")
-            
-            # Read existing BINs
-            existing_bins = []
-            if bin_file.exists():
-                with open(bin_file, 'r') as f:
-                    existing_bins = [line.strip() for line in f if line.strip()]
-            
-            # Add if not exists
-            if bin_number not in existing_bins:
-                with open(bin_file, 'a') as f:
-                    f.write(f"{bin_number}\n")
+            for bin_number in bin_lines:
+                # Validate BIN (6-8 digits)
+                if not bin_number.isdigit() or len(bin_number) < 6 or len(bin_number) > 8:
+                    fail_count += 1
+                    failed_bins.append(f"{bin_number} (không hợp lệ)")
+                    continue
+                
+                # Save to database
+                try:
+                    from database.repository import CardBinRepository
+                    CardBinRepository.create(bin_number)
+                    success_count += 1
+                except Exception as e:
+                    fail_count += 1
+                    failed_bins.append(f"{bin_number} (lỗi DB)")
+                    log.error(f"Failed to save BIN {bin_number}: {e}")
+                
+                # Also save to file as backup
+                try:
+                    from pathlib import Path
+                    bin_file = Path("card_bin.txt")
+                    
+                    # Read existing BINs
+                    existing_bins = []
+                    if bin_file.exists():
+                        with open(bin_file, 'r') as f:
+                            existing_bins = [line.strip() for line in f if line.strip()]
+                    
+                    # Add if not exists
+                    if bin_number not in existing_bins:
+                        with open(bin_file, 'a') as f:
+                            f.write(f"{bin_number}\n")
+                except:
+                    pass
             
             context.user_data.pop('waiting_for')
+            
+            # Build result message
+            result_msg = f"""
+✅ Hoàn thành!
+
+📊 Kết quả:
+• Tổng: {len(bin_lines)}
+• Thành công: {success_count}
+• Thất bại: {fail_count}
+"""
+            
+            if failed_bins and len(failed_bins) <= 5:
+                result_msg += f"\n❌ Lỗi:\n"
+                for fb in failed_bins:
+                    result_msg += f"• {fb}\n"
+            
             await update.message.reply_text(
-                f"✅ Đã thêm BIN!\n\n{bin_number}",
+                result_msg,
                 reply_markup=get_bin_management_keyboard()
             )
             
@@ -1030,7 +1229,12 @@ Chọn BIN để thử thanh toán:
                 workspace_name = context.user_data.get('workspace_name', 'N/A')
                 selected_bin = context.user_data.get('selected_bin', 'N/A')
                 
-                bin_text = "Tất cả BIN" if selected_bin == 'all' else f"BIN {selected_bin}"
+                if selected_bin == 'all':
+                    bin_text = "Tất cả BIN"
+                    card_text = f"{qty} thẻ/BIN"
+                else:
+                    bin_text = f"BIN {selected_bin}"
+                    card_text = f"{qty} thẻ"
                 
                 await update.message.reply_text(
                     f"""
@@ -1039,7 +1243,7 @@ Chọn BIN để thử thanh toán:
 📧 Tài khoản: {account_email}
 🏢 Workspace: {workspace_name}
 💳 BIN: {bin_text}
-🎯 Số thẻ: {qty} thẻ
+🎯 Số thẻ: {card_text}
 
 Bắt đầu thanh toán?
 """,

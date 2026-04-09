@@ -123,16 +123,31 @@ def load_bin(bin_file: str = "card_bin.txt") -> Optional[str]:
 
 def load_all_bins(bin_file: str = "card_bin.txt") -> list:
     """
-    Load tất cả BIN từ file (mỗi dòng 1 BIN)
+    Load tất cả BIN từ database, fallback to file
     
     Returns:
         List of BIN strings
     """
+    bins = []
+    
+    # Try to load from database first
+    try:
+        from database.repository import CardBinRepository
+        db_bins = CardBinRepository.get_all()
+        bins = [b['bin_number'] for b in db_bins]
+        
+        if bins:
+            log.info(f"📂 Đã tải {len(bins)} BIN từ database")
+            return bins
+    except Exception as e:
+        log.warning(f"⚠️ Could not load from database: {e}")
+    
+    # Fallback to file
     bin_path = Path(bin_file)
     if not bin_path.exists():
+        log.warning(f"⚠️ No BIN file found: {bin_file}")
         return []
     
-    bins = []
     with open(bin_path, 'r', encoding='utf-8') as f:
         for line in f:
             bin_number = line.strip()
@@ -141,9 +156,7 @@ def load_all_bins(bin_file: str = "card_bin.txt") -> list:
                 bins.append(bin_number)
     
     if bins:
-        log.info(f"📂 Đã tải {len(bins)} BIN từ {bin_file}")
-        for i, bin_num in enumerate(bins, 1):
-            log.info(f"   {i}. {bin_num}")
+        log.info(f"📂 Đã tải {len(bins)} BIN từ file")
     
     return bins
 
