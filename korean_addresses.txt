@@ -1,0 +1,50 @@
+# Korean Addresses for Payment
+# Format: line1|line2|city|postal_code|state
+
+# Seoul addresses
+521 Teheran-ro|Gangnam-gu|Seoul|06164|서울특별시
+123 Sejong-daero|Jung-gu|Seoul|04524|서울특별시
+456 Gangnam-daero|Seocho-gu|Seoul|06524|서울특별시
+789 Yeongdong-daero|Gangnam-gu|Seoul|06090|서울특별시
+234 Apgujeong-ro|Gangnam-gu|Seoul|06009|서울특별시
+567 Bongeunsa-ro|Gangnam-gu|Seoul|06124|서울특별시
+890 Nonhyeon-ro|Gangnam-gu|Seoul|06234|서울특별시
+321 Samseong-ro|Gangnam-gu|Seoul|06349|서울특별시
+654 Dosan-daero|Gangnam-gu|Seoul|06015|서울특별시
+987 Eonju-ro|Gangnam-gu|Seoul|06294|서울특별시
+
+# Busan addresses
+123 Haeundae-ro|Haeundae-gu|Busan|48094|부산광역시
+456 Gwangalli-ro|Suyeong-gu|Busan|48303|부산광역시
+789 Jungang-daero|Jung-gu|Busan|48938|부산광역시
+234 Marine City-ro|Haeundae-gu|Busan|48120|부산광역시
+567 Centum-ro|Haeundae-gu|Busan|48058|부산광역시
+
+# Incheon addresses
+321 Songdo-dong|Yeonsu-gu|Incheon|21984|인천광역시
+654 Convensia-daero|Yeonsu-gu|Incheon|21990|인천광역시
+987 Central-ro|Yeonsu-gu|Incheon|21999|인천광역시
+
+# Daegu addresses
+123 Jungang-daero|Jung-gu|Daegu|41911|대구광역시
+456 Dongseong-ro|Jung-gu|Daegu|41934|대구광역시
+
+# Daejeon addresses
+789 Dunsan-ro|Seo-gu|Daejeon|35229|대전광역시
+234 Hanbat-daero|Yuseong-gu|Daejeon|34126|대전광역시
+
+# Gwangju addresses
+567 Geumnam-ro|Dong-gu|Gwangju|61475|광주광역시
+890 Sangmu-daero|Seo-gu|Gwangju|61965|광주광역시
+
+# Ulsan addresses
+321 Samsan-ro|Nam-gu|Ulsan|44705|울산광역시
+654 Jinjang-ro|Buk-gu|Ulsan|44240|울산광역시
+
+# Suwon (Gyeonggi-do)
+987 Gwanggyo-ro|Yeongtong-gu|Suwon|16506|경기도
+123 Maeyeong-ro|Yeongtong-gu|Suwon|16514|경기도
+
+# Seongnam (Gyeonggi-do)
+456 Bundang-ro|Bundang-gu|Seongnam|13591|경기도
+789 Pangyoyeok-ro|Bundang-gu|Seongnam|13494|경기도

@@ -1,0 +1,58 @@
+# ChatGPT Auto Registration Settings
+
+tempmail:
+  api_base: "https://tempmailapi.io.vn/public_api.php"
+  timeout: 30
+  max_otp_attempts: 24
+  otp_check_interval: 5
+
+chatgpt:
+  base_url: "https://chatgpt.com"
+  auth_base_url: "https://auth.openai.com"
+  timeout: 30
+  
+registration:
+  # Random name pool
+  first_names:
+    - James
+    - Emma
+    - Liam
+    - Olivia
+    - Noah
+    - Ava
+    - Ethan
+    - Sophia
+    - Lucas
+    - Mia
+    - Mason
+    - Isabella
+    - Logan
+    - Charlotte
+    - Alexander
+    - Amelia
+    
+  last_names:
+    - Smith
+    - Johnson
+    - Brown
+    - Davis
+    - Wilson
+    - Moore
+    - Taylor
+    - Anderson
+    - Thomas
+    - Jackson
+    - White
+    - Harris
+    - Martin
+    - Thompson
+    
+  # Birthdate range
+  birth_year_min: 1985
+  birth_year_max: 2002
+
+logging:
+  level: INFO
+  format: "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan> - <level>{message}</level>"
+  file: "logs/chatgpt_register_{time:YYYY-MM-DD}.log"
+  save_to_database: true  # Enable database logging
