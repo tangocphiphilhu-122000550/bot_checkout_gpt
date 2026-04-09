@@ -1,5 +1,5 @@
 services:
-  - type: web
+  - type: worker
     name: chatgpt-auto-bot
     env: python
     region: singapore

@@ -68,6 +68,34 @@ class TelegramBot:
                 except Exception as e:
                     log.warning(f"Could not send startup message to admin {admin_id}: {e}")
     
+    async def error_handler(self, update, context):
+        """Handle errors"""
+        try:
+            error = context.error
+            log.error(f"❌ Bot error: {error}")
+            
+            # Handle specific errors
+            if "Conflict" in str(error):
+                log.error("⚠️ Bot conflict detected - another instance is running!")
+                log.error("💡 Please stop other bot instances before starting this one")
+                # Don't crash, just log
+                return
+            
+            # Log to database if available
+            try:
+                from database.repository import LogRepository
+                LogRepository.create(
+                    level='ERROR',
+                    module='telegram_bot',
+                    message=f"Bot error: {str(error)[:2000]}",
+                    extra_data={'update': str(update) if update else None}
+                )
+            except:
+                pass
+                
+        except Exception as e:
+            log.error(f"Error in error handler: {e}")
+    
     def run(self):
         """Run the bot"""
         log.info("=" * 60)
@@ -82,6 +110,9 @@ class TelegramBot:
         
         # Setup handlers
         self.setup_handlers()
+        
+        # Add error handler
+        self.app.add_error_handler(self.error_handler)
         
         log.success("✅ Bot handlers configured")
         log.info("🚀 Starting polling...")
