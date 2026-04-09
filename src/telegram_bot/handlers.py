@@ -40,15 +40,20 @@ def load_accounts():
     """Load accounts from database"""
     try:
         accounts = AccountRepository.get_all()
-        return [acc.to_dict() for acc in accounts]
+        log.info(f"📊 Loaded {len(accounts)} accounts from database")
+        return accounts
     except Exception as e:
+        log.error(f"❌ Failed to load from database: {e}")
         # Fallback to JSON file
         if not ACCOUNTS_FILE.exists():
             return []
         try:
             with open(ACCOUNTS_FILE, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except:
+                data = json.load(f)
+                log.info(f"📊 Loaded {len(data)} accounts from JSON file")
+                return data
+        except Exception as e2:
+            log.error(f"❌ Failed to load from JSON: {e2}")
             return []
 
 
@@ -62,31 +67,15 @@ def save_account(account_dict: dict):
             birthdate=account_dict.get('birthdate'),
             cookies=account_dict.get('cookies')
         )
+        log.success(f"✅ Account saved to database: {account_dict['email']}")
     except Exception as e:
+        log.error(f"❌ Failed to save to database: {e}")
         # Fallback to JSON file
         accounts = load_accounts()
         accounts.append(account_dict)
         with open(ACCOUNTS_FILE, 'w', encoding='utf-8') as f:
             json.dump(accounts, f, indent=2, ensure_ascii=False)
-
-
-def load_accounts():
-    """Load accounts from file"""
-    if not ACCOUNTS_FILE.exists():
-        return []
-    try:
-        with open(ACCOUNTS_FILE, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except:
-        return []
-
-
-def save_account(account_dict: dict):
-    """Save account to file"""
-    accounts = load_accounts()
-    accounts.append(account_dict)
-    with open(ACCOUNTS_FILE, 'w', encoding='utf-8') as f:
-        json.dump(accounts, f, indent=2, ensure_ascii=False)
+        log.info(f"💾 Account saved to JSON file: {account_dict['email']}")
 
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
