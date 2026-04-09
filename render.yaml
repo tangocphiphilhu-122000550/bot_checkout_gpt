@@ -8,6 +8,7 @@ services:
       pip install --upgrade pip
       pip install -r requirements.txt
       playwright install chromium
+      python clear_webhook.py || true
     startCommand: python bot_main.py
     envVars:
       - key: PYTHON_VERSION
