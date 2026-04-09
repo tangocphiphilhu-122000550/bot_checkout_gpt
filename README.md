@@ -18,7 +18,7 @@ Automated bot for ChatGPT account registration and workspace subscription paymen
 
 ## Installation
 
-1. Install Python 3.8+
+1. Install Python 3.12+
 
 2. Install dependencies:
 ```bash
@@ -38,34 +38,42 @@ TEMPMAIL_API_KEY=your_api_key_here
 # ChatGPT default password
 CHATGPT_PASSWORD=YourSecurePassword123!
 
-# Supabase Database (optional, fallback to JSON if not configured)
+# Supabase Database
 DATABASE_URL=postgresql://user:password@host:port/database
+
+# Telegram Bot (optional)
+TELEGRAM_BOT_TOKEN=your_bot_token
+TELEGRAM_ADMIN_IDS=your_chat_id
 ```
 
-5. (Optional) Initialize Supabase database:
-```bash
-python init_database.py
-```
-
-If DATABASE_URL is not configured, the bot will use `accounts.json` file as fallback.
+5. Setup Supabase database:
+   - Go to your Supabase project → SQL Editor
+   - Copy and paste content from `database_setup.sql`
+   - Click "Run" to create all tables and insert 100 Korean addresses
+   - Verify: Check Tables section to see all 6 tables created
 
 ## Usage
 
-### Option 1: CLI Mode
-
-Run the bot:
-```bash
-python main.py
-```
-
-### Option 2: Telegram Bot Mode
+### Telegram Bot Mode (Recommended)
 
 Run the Telegram bot:
 ```bash
 python bot_main.py
 ```
 
-See [TELEGRAM_QUICKSTART.md](TELEGRAM_QUICKSTART.md) for setup guide.
+Features:
+- Remote control via Telegram
+- Register accounts
+- Manage proxies and BINs
+- Upgrade accounts to Plus/Team
+- View logs and statistics
+
+### CLI Mode
+
+Run the CLI:
+```bash
+python main.py
+```
 
 ### Options
 
@@ -111,9 +119,7 @@ chatgpt-auto-bot/
 │   └── settings.yaml          # Settings
 ├── logs/                      # Log files
 ├── accounts.json              # Registered accounts (fallback)
-├── card_bin.txt               # Saved card BIN (auto-created)
-├── init_database.py           # Initialize Supabase tables
-├── migrate_json_to_db.py      # Migrate JSON to database
+├── database_setup.sql         # Database setup script (run in Supabase)
 ├── .env                       # Environment variables
 └── requirements.txt           # Dependencies
 ```
@@ -254,29 +260,31 @@ The bot includes a Telegram interface for remote control.
 
 ## Supabase Database
 
-The bot supports Supabase PostgreSQL for data storage.
+The bot uses Supabase PostgreSQL for data storage.
 
 ### Quick Setup
-1. Add to `.env`:
+1. Create Supabase project at https://supabase.com
+2. Go to SQL Editor
+3. Copy and paste `database_setup.sql` content
+4. Click "Run" to create all tables
+5. Add DATABASE_URL to `.env`:
    ```env
    DATABASE_URL=postgresql://user:pass@host:port/database
    ```
-2. Initialize: `python init_database.py`
-3. (Optional) Migrate existing data:
-   - Accounts: `python migrate_json_to_db.py`
-   - Proxies: `python migrate_proxy_to_db.py`
 
-### Tables
+### Tables Created
 - `accounts` - ChatGPT accounts with cookies
 - `payments` - Payment transaction history
 - `card_bins` - Card BINs with success/fail stats
 - `proxies` - Proxy management with performance tracking
+- `korean_addresses` - 100 Korean addresses for billing
+- `logs` - Application logs
 
 ### Features
-- Auto fallback to JSON files if database unavailable
 - Track BIN and proxy success rates
 - Smart proxy selection by country
 - Payment history tracking
+- Automatic log cleanup (30 days)
 
 ## Dependencies
 
