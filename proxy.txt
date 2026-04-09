@@ -1,3 +1,0 @@
-# Format: username:password@host:port
-http://GQA4qJnlu210_custom_zone_KR_st__city_sid_79361347_time_5:2636200@change5.owlproxy.com:7778
-http://GQA4qJnlu210_custom_zone_KR_st__city_sid_29015572_time_5:2636200@change5.owlproxy.com:7778
